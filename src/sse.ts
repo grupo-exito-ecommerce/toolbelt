@@ -1,8 +1,7 @@
-import chalk from 'chalk'
-import { compose, forEach, contains, path, pathOr } from 'ramda'
+import { compose, contains, forEach, path, pathOr } from 'ramda'
 
 import { getToken } from './conf'
-import { endpoint, publicEndpoint, envCookies } from './env'
+import { endpoint, envCookies, publicEndpoint } from './env'
 import { SSEConnectionError } from './errors'
 import EventSource from './eventsource'
 import { removeVersion } from './locator'
@@ -90,17 +89,11 @@ export const onEvent = (ctx: Context, sender: string, subject: string, keys: str
 }
 
 export const logAll = (context: Context, logLevel: string, id: string, senders?: string[]) => {
-  let previous = ''
-  const callback = ({ sender, level, body: { message, code } }: Message) => {
-    if (!(message || code)) {
-      return // Ignore logs without message or code.
+  const callback = ({ sender, level, body: { message, code, progress, scope, clear } }: Message) => {
+    if (!(message || code || progress)) {
+      return // Ignore logs without code or progress bar info.
     }
-    const suffix = sender.startsWith(id) ? '' : ' ' + chalk.gray(sender)
-    const formatted = (message || code || '').replace(/\n\s*$/, '') + suffix
-    if (previous !== formatted) {
-      previous = formatted
-      log.log(level, formatted)
-    }
+    log.log({ level, message, code, progress, sender, scope, clear })
   }
 
   return onLog(context, id, logLevel, callback, senders)

@@ -6,18 +6,18 @@ import chalk from 'chalk'
 import { all as clearCachedModules } from 'clear-module'
 import { CommandNotFoundError, find, MissingRequiredArgsError, run as unboundRun } from 'findhelp'
 import { decode } from 'jsonwebtoken'
-import * as moment from 'moment'
+// import * as moment from 'moment'
 import * as path from 'path'
 import { reject, without } from 'ramda'
 import { isFunction } from 'ramda-adjunct'
 import * as pkg from '../package.json'
 import { getToken } from './conf'
+import * as conf from './conf'
 import { envCookies } from './env'
 import { CommandError, SSEConnectionError, UserCancelledError } from './errors'
 import log from './logger'
 import tree from './modules/tree'
-import notify from './update'
-import * as conf from './conf'
+import { default as notifyAvailableUpdate } from './update'
 
 axios.interceptors.request.use(config => {
   if (envCookies()) {
@@ -39,11 +39,6 @@ let loginPending = false
 // Setup logging
 const VERBOSE = '--verbose'
 const isVerbose = process.argv.indexOf(VERBOSE) >= 0
-if (isVerbose) {
-  log.level = 'debug'
-  ;(log.default.transports.console as any).timestamp = () =>
-    chalk.grey(moment().format('HH:mm:ss.SSS'))
-}
 
 if (process.env.NODE_ENV === 'development') {
   try {
@@ -52,9 +47,6 @@ if (process.env.NODE_ENV === 'development') {
     log.debug('Couldn\'t require longjohn. If you want long stack traces, run: npm install -g longjohn')
   }
 }
-
-// Show update notification if newer version is available
-notify()
 
 const logToolbeltVersion = () => {
   log.debug(`Toolbelt version: ${pkg.version}`)
@@ -78,6 +70,9 @@ const checkLogin = args => {
 }
 
 const main = async () => {
+  // Show update notification if newer version is available
+  await notifyAvailableUpdate()
+
   const args = process.argv.slice(2)
   conf.saveEnvironment(conf.Environment.Production) // Just to be backwards compatible with who used staging previously
 
@@ -143,13 +138,12 @@ const onError = e => {
         log.error('A temporary failure in name resolution occurred :(')
         break
       default:
-        log.error('Unexpected error occurred')
+        log.error('Unhandled exception')
+        log.error('Please report the issue in https://github.com/vtex/toolbelt/issues')
         if (e.config && e.config.url && e.config.method) {
           log.error(`${e.config.method} ${e.config.url}`)
         }
-        if (isVerbose) {
-          log.error(e)
-        }
+        log.debug(e)
     }
   } else {
     switch (e.name) {
@@ -171,15 +165,10 @@ const onError = e => {
         log.debug('User Cancelled')
         break
       default:
-        log.error('Unexpected error occurred')
-        if (e.message) {
-          log.error(`${e.message}`)
-        }
-        if (isVerbose) {
-          log.error(e)
-        } else {
-          log.error(reject(isFunction, e))
-        }
+        log.error('Unhandled exception')
+        log.error('Please report the issue in https://github.com/vtex/toolbelt/issues')
+        log.error(reject(isFunction, e))
+        log.debug(e)
     }
   }
   process.exit(1)
