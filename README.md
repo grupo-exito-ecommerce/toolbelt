@@ -1,4 +1,6 @@
-# VTEX Toolbelt
+# VTEX Toolbelt Fork
+
+This is a copy of vtex toolbet. [vtex](https://github.com/vtex/toolbelt)
 
 [![Greenkeeper badge](https://badges.greenkeeper.io/vtex/toolbelt.svg)](https://greenkeeper.io/)
 
@@ -42,7 +44,7 @@ npm install -g vtex
 Now you can use the `vtex` command:
 
 ```
-$ vtex
+$ vtex-fork
   Welcome to VTEX I/O
   Login with vtex login <account>
 

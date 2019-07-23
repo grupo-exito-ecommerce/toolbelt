@@ -1,5 +1,5 @@
 {
-  "name": "vtex",
+  "name": "vtex-fork",
   "version": "2.65.2",
   "description": "The platform for e-commerce apps",
   "main": "lib/index.js",
@@ -18,7 +18,7 @@
     "test": "run-s lint build nyc",
     "test-watch": "run-p ts-watch ava",
     "coveralls": "nyc report --reporter=text-lcov | coveralls",
-    "prepublish": "run-s clean test",
+    "prepublish": "",
     "prereleasy": "npm run prepublish",
     "postreleasy": "npm publish"
   },

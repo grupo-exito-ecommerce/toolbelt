@@ -7,7 +7,7 @@ import * as chokidar from 'chokidar'
 import * as debounce from 'debounce'
 import { readFileSync } from 'fs'
 import * as moment from 'moment'
-import { join, resolve as resolvePath, sep} from 'path'
+import { join, resolve as resolvePath, sep } from 'path'
 import { compose, concat, intersection, isEmpty, keys, map, not, pipe, prop, toPairs } from 'ramda'
 import { createInterface } from 'readline'
 import { createClients } from '../../clients'
@@ -70,7 +70,7 @@ const warnAndLinkFromStart = (appId: string, builder: Builder, unsafe: boolean, 
   return null
 }
 
-const watchAndSendChanges = async (appId: string, builder: Builder, extraData : {linkConfig : LinkConfig}, unsafe: boolean): Promise<any> => {
+const watchAndSendChanges = async (appId: string, builder: Builder, extraData: { linkConfig: LinkConfig }, unsafe: boolean): Promise<any> => {
   const changeQueue: Change[] = []
 
   const onInitialLinkRequired = e => {
@@ -96,7 +96,7 @@ const watchAndSendChanges = async (appId: string, builder: Builder, extraData : 
   }, 1000)
 
   const pathToChange = (path: string, remove?: boolean): Change => ({
-    content: remove ? null : readFileSync(resolvePath(root, path)).toString('base64'), path : pathModifier(path),
+    content: remove ? null : readFileSync(resolvePath(root, path)).toString('base64'), path: pathModifier(path),
   })
 
   const moduleAndMetadata = toPairs(extraData.linkConfig.metadata)
@@ -141,7 +141,7 @@ const watchAndSendChanges = async (appId: string, builder: Builder, extraData : 
   })
 }
 
-const performInitialLink = async (appId: string, builder: Builder, extraData : {linkConfig : LinkConfig}, unsafe: boolean): Promise<void> => {
+const performInitialLink = async (appId: string, builder: Builder, extraData: { linkConfig: LinkConfig }, unsafe: boolean): Promise<void> => {
   const linkConfig = await createLinkConfig(root)
 
   extraData.linkConfig = linkConfig
@@ -171,7 +171,7 @@ const performInitialLink = async (appId: string, builder: Builder, extraData : {
     }
 
     if (tryCount > 1) {
-      log.info(`Retrying...${tryCount-1}`)
+      log.info(`Retrying...${tryCount - 1}`)
     }
 
     const stickyHint = await getSavedOrMostAvailableHost(appId, builder, N_HOSTS, AVAILABILITY_TIMEOUT)
@@ -206,7 +206,7 @@ export default async (options) => {
   const manifest = await getManifest()
   try {
     await writeManifestSchema()
-  } catch(e) {
+  } catch (e) {
     log.debug('Failed to write schema on manifest.')
   }
   const builderHubMessage = await checkBuilderHubMessage('link')
@@ -221,18 +221,26 @@ export default async (options) => {
 
   const appId = toAppLocator(manifest)
   const context = { account: getAccount(), workspace: getWorkspace(), environment: getEnvironment() }
-  if (options.setup || options.s) {
+
+  // Capturo el flag para saber si empleo la ultima versión siempre o no.
+  const YARNINSTALL = '--yarn';
+  const yanrInstall = process.argv.indexOf(YARNINSTALL) >= 0;
+
+  if (yanrInstall) {
     await setup()
   }
   try {
     const aux = await getPinnedDependencies(builderHttp)
-    const pinnedDeps : Map<string, string> = new Map(Object.entries(aux))
+    const pinnedDeps: Map<string, string> = new Map(Object.entries(aux))
     await bluebird.map(buildersToRunLocalYarn, fixPinnedDependencies(pinnedDeps), { concurrency: 1 })
-  } catch(e) {
+  } catch (e) {
     log.info('Failed to check for pinned dependencies')
   }
-  // Always run yarn locally for some builders
-  map(runYarnIfPathExists, buildersToRunLocalYarn)
+
+  if (yanrInstall) {
+    // Always run yarn locally for some builders
+    map(runYarnIfPathExists, buildersToRunLocalYarn)
+  }
 
   const { builder } = createClients(context, { timeout: 60000 })
 
