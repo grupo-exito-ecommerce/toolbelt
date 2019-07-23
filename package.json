@@ -1,6 +1,6 @@
 {
   "name": "vtex-fork",
-  "version": "2.65.2",
+  "version": "2.65.4",
   "description": "The platform for e-commerce apps",
   "main": "lib/index.js",
   "bin": "lib/cli.js",
@@ -28,7 +28,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/vtex/toolbelt.git"
+    "url": "git://github.com/grupo-exito-ecommerce/toolbelt"
   },
   "keywords": [
     "CLI",
